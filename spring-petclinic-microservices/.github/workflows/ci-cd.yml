@@ -1,0 +1,92 @@
+name: CI/CD Pipeline — spring-petclinic-microservices
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+env:
+  DOCKERHUB_USERNAME: ivanalos
+
+jobs:
+  # ─────────────────────────────────────────
+  # JOB 1 — Build & Test (CI)
+  # ─────────────────────────────────────────
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build & Test with Maven
+        run: mvn clean package --batch-mode
+
+  # ─────────────────────────────────────────
+  # JOB 2 — Docker Build & Push (сите сервиси)
+  # ─────────────────────────────────────────
+  docker-build-push:
+    name: Docker Build & Push to DockerHub
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    strategy:
+      matrix:
+        service:
+          - name: config-server
+            context: spring-petclinic-config-server
+          - name: discovery-server
+            context: spring-petclinic-discovery-server
+          - name: api-gateway
+            context: spring-petclinic-api-gateway
+          - name: customers-service
+            context: spring-petclinic-customers-service
+          - name: visits-service
+            context: spring-petclinic-visits-service
+          - name: vets-service
+            context: spring-petclinic-vets-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build JAR за ${{ matrix.service.name }}
+        run: mvn clean package -DskipTests=true --batch-mode -pl ${{ matrix.service.context }}
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker meta за ${{ matrix.service.name }}
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKERHUB_USERNAME }}/spring-petclinic-${{ matrix.service.name }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and Push — ${{ matrix.service.name }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
