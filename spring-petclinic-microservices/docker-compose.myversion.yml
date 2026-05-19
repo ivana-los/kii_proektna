@@ -1,0 +1,90 @@
+version: "3.9"
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: petclinic
+      MYSQL_DATABASE: petclinic
+      MYSQL_USER: petclinic
+      MYSQL_PASSWORD: petclinic
+    ports:
+      - "3306:3306"
+
+  config-server:
+    build:
+      context: ./spring-petclinic-config-server
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+
+  discovery-server:
+    build:
+      context: ./spring-petclinic-discovery-server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-server
+
+  customers-service:
+    build:
+      context: ./spring-petclinic-customers-service
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=mysql
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/petclinic
+      - SPRING_DATASOURCE_USERNAME=petclinic
+      - SPRING_DATASOURCE_PASSWORD=petclinic
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+      - config-server
+      - discovery-server
+
+  vets-service:
+    build:
+      context: ./spring-petclinic-vets-service
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=mysql
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/petclinic
+      - SPRING_DATASOURCE_USERNAME=petclinic
+      - SPRING_DATASOURCE_PASSWORD=petclinic
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysql
+      - config-server
+      - discovery-server
+
+  visits-service:
+    build:
+      context: ./spring-petclinic-visits-service
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=mysql
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/petclinic
+      - SPRING_DATASOURCE_USERNAME=petclinic
+      - SPRING_DATASOURCE_PASSWORD=petclinic
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+      - config-server
+      - discovery-server
+
+  api-gateway:
+    build:
+      context: ./spring-petclinic-api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - config-server
+      - discovery-server
+      - customers-service
+      - vets-service
+      - visits-service
