@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: petclinic-app-config
+  namespace: petclinic
+  labels:
+    app: spring-petclinic
+data:
+  SPRING_PROFILES_ACTIVE: "docker,mysql"
+  CONFIG_SERVER_URL: "http://config-server:8888"
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+  SPRING_ZIPKIN_BASE_URL: "http://tracing-server:9411/"
+  SPRING_SLEUTH_SAMPLER_PROBABILITY: "1.0"
+  MYSQL_HOST: "mysql-0.mysql.petclinic.svc.cluster.local"
+  MYSQL_PORT: "3306"
+  JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70"
