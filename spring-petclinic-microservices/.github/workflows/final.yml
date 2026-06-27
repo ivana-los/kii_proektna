@@ -26,7 +26,19 @@ jobs:
           cache: maven
 
       - name: Build all services with Maven
-        run: mvn package -DskipTests
+        run: |
+          for dir in \
+            spring-petclinic-config-server \
+            spring-petclinic-discovery-server \
+            spring-petclinic-customers-service \
+            spring-petclinic-visits-service \
+            spring-petclinic-vets-service \
+            spring-petclinic-api-gateway \
+            spring-petclinic-admin-server \
+            spring-petclinic-genai-service; do
+            echo "Building $dir"
+            (cd "$dir" && mvn package -DskipTests)
+          done
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
