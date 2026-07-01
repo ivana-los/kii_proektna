@@ -8,11 +8,9 @@ pipeline {
 
     stages {
 
-     
-
         stage('Build') {
             steps {
-              sh './mvnw clean package -DskipTests'
+                sh 'cd spring-petclinic-microservices && ./mvnw clean package -DskipTests'
             }
         }
 
@@ -23,24 +21,18 @@ pipeline {
         }
 
         stage('Docker Push') {
-
             steps {
-
                 withCredentials([usernamePassword(
                         credentialsId: 'dockerhub',
                         usernameVariable: 'USER',
                         passwordVariable: 'PASS'
                 )]) {
-
                     sh '''
                     echo $PASS | docker login -u $USER --password-stdin
                     docker push $IMAGE:latest
                     '''
                 }
             }
-
         }
-
     }
-
 }
