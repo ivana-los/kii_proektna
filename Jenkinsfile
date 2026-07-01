@@ -1,35 +1,34 @@
 pipeline {
-
     agent any
-
     environment {
         IMAGE = "dockerhubusername/petclinic"
     }
-
     stages {
-
-        stage('Build') {
+      stage('Build') {
             steps {
-                sh 'cd spring-petclinic-microservices && ./mvnw clean package -DskipTests'
+                dir('spring-petclinic-microservices') {
+                    sh 'chmod +x mvnw'
+                    sh './mvnw clean package -DskipTests'
+                }
             }
         }
-
         stage('Docker Build') {
             steps {
-                sh 'docker build -t $IMAGE:latest .'
+                dir('spring-petclinic-microservices') {
+                    sh 'docker build -t $IMAGE:latest .'
+                }
             }
         }
-
         stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(
-                        credentialsId: 'dockerhub',
-                        usernameVariable: 'USER',
-                        passwordVariable: 'PASS'
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
                 )]) {
                     sh '''
-                    echo $PASS | docker login -u $USER --password-stdin
-                    docker push $IMAGE:latest
+                        echo $PASS | docker login -u $USER --password-stdin
+                        docker push $IMAGE:latest
                     '''
                 }
             }
