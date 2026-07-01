@@ -1,20 +1,17 @@
 pipeline {
     agent any
-
     environment {
         IMAGE = "dockerhubusername/petclinic"
     }
-
     stages {
-
         stage('Build') {
             steps {
                 dir('spring-petclinic-microservices') {
+                    sh 'chmod +x mvnw'
                     sh './mvnw clean package -DskipTests'
                 }
             }
         }
-
         stage('Docker Build') {
             steps {
                 dir('spring-petclinic-microservices') {
@@ -22,7 +19,6 @@ pipeline {
                 }
             }
         }
-
         stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(
