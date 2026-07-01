@@ -15,7 +15,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 dir('spring-petclinic-microservices') {
-                    sh 'docker build -t $IMAGE:latest .'
+                   sh 'docker build -f docker/Dockerfile -t $IMAGE:latest .'
                 }
             }
         }
