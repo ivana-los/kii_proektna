@@ -8,11 +8,7 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/ivana-los/kii_proekt.git'
-            }
-        }
+     
 
         stage('Build') {
             steps {
